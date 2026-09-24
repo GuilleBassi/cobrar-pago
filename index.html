@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e0e" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -150,6 +151,7 @@ img{max-width:100%}
     border: 2px solid transparent; border-radius: 10px;
     padding: 16px; width: 100%; box-sizing: border-box;
   }
+  .campo input:focus { outline: none; border-color: var(--focus); }
   .campo input::placeholder { color: var(--muted); opacity: .7; }
   .campo.error input { border-color: var(--err); }
   .campo .msg { color: var(--err); font-size: 14px; min-height: 1.2em; }
