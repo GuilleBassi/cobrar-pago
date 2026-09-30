@@ -226,8 +226,8 @@ img{max-width:100%}
   .sheet .persona { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 16px; }
   .sheet .persona .chico { width: 52px; height: 52px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; flex: none; }
   .sheet .persona strong { font-size: 30px; font-weight: 500; letter-spacing: -.01em; overflow-wrap: anywhere; }
-  .calif .velo { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,0,0,.45); }
-  .hud { position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); left: 16px; right: 16px; display: flex; align-items: flex-start; justify-content: space-between; }
+  .calif .velo { position: absolute; z-index: 2; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,0,0,.45); }
+  .hud { position: absolute; z-index: 2; top: calc(14px + env(safe-area-inset-top, 0px)); left: 16px; right: 16px; display: flex; align-items: flex-start; justify-content: space-between; }
   .hud .redondo { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.14); display: grid; place-items: center; position: relative; }
   .hud .redondo svg { width: 24px; height: 24px; stroke: #fff; stroke-width: 2.4; fill: none; stroke-linecap: round; }
   .hud .badge { position: absolute; top: -2px; right: -4px; background: #2f5fd0; color: #fff; font-size: 12px; font-weight: 700; border-radius: 12px; padding: 2px 6px; }
@@ -450,6 +450,8 @@ img{max-width:100%}
       </g>
       <g transform="translate(200 370)"><circle r="20" fill="#2b2d35" stroke="#000" stroke-width="3"/><path d="M-7 -8 L9 0 L1 3 L-2 11 Z" fill="#000"/></g>
     </svg>
+    <!-- Mapa con calles reales (OpenStreetMap): se muestra encima del dibujo apenas hay GPS -->
+    <div id="mapa-real-calif" class="mapa-real" aria-hidden="true"></div>
     <div class="velo"></div>
     <div class="hud">
       <div class="redondo">
@@ -604,6 +606,14 @@ class Ubicador {
     return this.#ultima;
   }
 
+  // Solo las coordenadas, sin averiguar la calle (para pantallas que únicamente necesitan centrar un mapa).
+  async coordenadas() {
+    if (Date.now() - this.#ultimaVez < Ubicador.#DURACION_CACHE_MS && this.#ultima) {
+      return { latitud: this.#ultima.latitud, longitud: this.#ultima.longitud };
+    }
+    return this.#posicion();
+  }
+
   #posicion() {
     return new Promise((resolver, rechazar) => {
       if (!("geolocation" in navigator)) { rechazar(new Error("El navegador no permite ubicación.")); return; }
@@ -628,23 +638,71 @@ class Ubicador {
   }
 }
 
-class PantallaViaje extends Pantalla {
-  // Ícono del mapa real: mismo círculo blanco con flecha negra que el del mapa dibujado.
-  static #ICONO_UBICACION = typeof L === "undefined" ? null : L.divIcon({
-    className: "marcador-real", iconSize: [38, 38], iconAnchor: [19, 19],
-    html: '<svg viewBox="0 0 40 40" width="38" height="38">'
-      + '<circle cx="20" cy="20" r="17" fill="#fff" stroke="#000" stroke-width="3"/>'
-      + '<path d="M20 8 L30 31 L20 25 L10 31 Z" fill="#000"/></svg>',
-  });
+// Mapa con calles reales (Leaflet + Esri "Dark Gray", gratis y sin API key), centrado en el GPS.
+// Zoom fijo en 14: a partir de ahí ese servicio empieza a mostrar nombres de calles, y el pedido es un mapa limpio.
+// Sin interacción (no se puede mover ni hacer zoom), igual que el mapa dibujado que reemplaza.
+// Si algo falla, no pasa nada: se queda visible el mapa dibujado de abajo. Se reutiliza en cada pantalla con mapa.
+class MapaDeFondo {
+  static #ZOOM = 14;
+  static #icono = null;
 
+  // Círculo blanco con flecha negra: mismo dibujo que el marcador del mapa dibujado.
+  static #obtenerIcono() {
+    if (!MapaDeFondo.#icono && typeof L !== "undefined") {
+      MapaDeFondo.#icono = L.divIcon({
+        className: "marcador-real", iconSize: [38, 38], iconAnchor: [19, 19],
+        html: '<svg viewBox="0 0 40 40" width="38" height="38">'
+          + '<circle cx="20" cy="20" r="17" fill="#fff" stroke="#000" stroke-width="3"/>'
+          + '<path d="M20 8 L30 31 L20 25 L10 31 Z" fill="#000"/></svg>',
+      });
+    }
+    return MapaDeFondo.#icono;
+  }
+
+  constructor(contenedor) {
+    this.contenedor = contenedor;
+    this.mapa = null;
+    this.marcador = null;
+  }
+
+  mostrar(latitud, longitud) {
+    if (typeof L === "undefined") return;
+    try {
+      if (!this.mapa) {
+        this.mapa = L.map(this.contenedor, {
+          zoomControl: false, attributionControl: true,
+          dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false,
+        }).setView([latitud, longitud], MapaDeFondo.#ZOOM);
+        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+          maxZoom: MapaDeFondo.#ZOOM, minZoom: MapaDeFondo.#ZOOM,
+          attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
+        }).addTo(this.mapa);
+        this.marcador = L.marker([latitud, longitud], { icon: MapaDeFondo.#obtenerIcono() }).addTo(this.mapa);
+        this.contenedor.classList.add("visible");
+      } else {
+        this.mapa.setView([latitud, longitud], MapaDeFondo.#ZOOM);
+        this.marcador.setLatLng([latitud, longitud]);
+      }
+      // La pantalla recién se está mostrando, así que el mapa se crea antes de tener su tamaño final:
+      // sin este reintento carga un solo cuadro del mapa en vez de llenar toda la pantalla.
+      setTimeout(() => {
+        if (!this.mapa) return;
+        this.mapa.invalidateSize();
+        this.mapa.setView([latitud, longitud], MapaDeFondo.#ZOOM);
+      }, 150);
+    } catch {
+      // Se queda con el mapa dibujado como respaldo.
+    }
+  }
+}
+
+class PantallaViaje extends Pantalla {
   constructor(alCobrar) {
     super("p-viaje");
     this.pago = null;
     this.ubicador = new Ubicador();
     this.elCalle = document.getElementById("v-calle");
-    this.elMapaReal = document.getElementById("mapa-real");
-    this.mapaReal = null;
-    this.marcadorReal = null;
+    this.mapaReal = new MapaDeFondo(document.getElementById("mapa-real"));
     this.#dibujarManzanas();
     document.getElementById("b-ir-cobro").addEventListener("click", () => alCobrar(this.pago));
   }
@@ -660,46 +718,10 @@ class PantallaViaje extends Pantalla {
     try {
       const { calle, latitud, longitud } = await this.ubicador.ubicacionActual();
       this.elCalle.textContent = calle;
-      this.#mostrarMapaReal(latitud, longitud);
+      this.mapaReal.mostrar(latitud, longitud);
     } catch {
       // Sin permiso de ubicación, sin GPS, o abierto desde el link de claude.ai (ahí el navegador la bloquea).
       this.elCalle.textContent = "Formosa Capital";
-    }
-  }
-
-  // Mapa con calles reales (Leaflet + Esri "Dark Gray", gratis y sin API key), centrado en el GPS.
-  // Zoom fijo en 14: a partir de ahí ese servicio empieza a mostrar nombres de calles, y el pedido es un mapa limpio.
-  // Sin interacción (no se puede mover ni hacer zoom), igual que el mapa dibujado que reemplaza.
-  // Si algo falla, no pasa nada: se queda visible el mapa dibujado de abajo.
-  static #ZOOM_MAPA_REAL = 14;
-
-  #mostrarMapaReal(latitud, longitud) {
-    if (typeof L === "undefined") return;
-    try {
-      if (!this.mapaReal) {
-        this.mapaReal = L.map(this.elMapaReal, {
-          zoomControl: false, attributionControl: true,
-          dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false,
-        }).setView([latitud, longitud], PantallaViaje.#ZOOM_MAPA_REAL);
-        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
-          maxZoom: PantallaViaje.#ZOOM_MAPA_REAL, minZoom: PantallaViaje.#ZOOM_MAPA_REAL,
-          attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
-        }).addTo(this.mapaReal);
-        this.marcadorReal = L.marker([latitud, longitud], { icon: PantallaViaje.#ICONO_UBICACION }).addTo(this.mapaReal);
-        this.elMapaReal.classList.add("visible");
-      } else {
-        this.mapaReal.setView([latitud, longitud], PantallaViaje.#ZOOM_MAPA_REAL);
-        this.marcadorReal.setLatLng([latitud, longitud]);
-      }
-      // La pantalla recién se está mostrando, así que el mapa se crea antes de tener su tamaño final:
-      // sin este reintento carga un solo cuadro del mapa en vez de llenar toda la pantalla.
-      setTimeout(() => {
-        if (!this.mapaReal) return;
-        this.mapaReal.invalidateSize();
-        this.mapaReal.setView([latitud, longitud], PantallaViaje.#ZOOM_MAPA_REAL);
-      }, 150);
-    } catch {
-      // Se queda con el mapa dibujado como respaldo.
     }
   }
 
@@ -821,6 +843,8 @@ class PantallaCalificar extends Pantalla {
     super("p-calificar");
     this.pasajero = null;
     this.estrellas = 5;
+    this.ubicador = new Ubicador();
+    this.mapaReal = new MapaDeFondo(document.getElementById("mapa-real-calif"));
     this.contenedor = document.getElementById("k-estrellas");
     this.botones = [1, 2, 3, 4, 5].map((n) => {
       const b = document.createElement("button");
@@ -842,6 +866,9 @@ class PantallaCalificar extends Pantalla {
     this.pasajero = pasajero;
     document.getElementById("k-nombre").textContent = pasajero.nombre;
     this.#elegir(5);
+    this.ubicador.coordenadas()
+      .then(({ latitud, longitud }) => this.mapaReal.mostrar(latitud, longitud))
+      .catch(() => {}); // sin ubicación, se queda con el mapa dibujado de fondo
   }
 
   #elegir(n) {
@@ -904,7 +931,8 @@ class App {
   irAViaje(pago) { this.#mostrar(this.viaje, () => this.viaje.cargar(pago)); }
   irACobro(pago) { this.cobro.cargar(pago); this.#mostrar(this.cobro); }
   irAResumen(pago, recibido) { this.resumen.cargar(pago, recibido); this.#mostrar(this.resumen); }
-  irACalificar(pago) { this.calificar.cargar(pago.pasajero); this.#mostrar(this.calificar); }
+  // cargar() va como "despues", no antes: mismo motivo que en irAViaje.
+  irACalificar(pago) { this.#mostrar(this.calificar, () => this.calificar.cargar(pago.pasajero)); }
 
   terminar(pasajero) {
     const n = pasajero.calificacion;
