@@ -187,6 +187,19 @@ img{max-width:100%}
   .calif .movil, .viaje .movil { position: relative; width: 100%; max-width: 480px; height: 100%; overflow: hidden; }
   .calif svg.mapa, .viaje svg.mapa { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
+  /* Mapa real (Leaflet + OpenStreetMap), de fondo mientras no cargó y encima ya con la ubicación real */
+  .mapa-real {
+    position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 1;
+    background: transparent; opacity: 0; transition: opacity .3s ease; pointer-events: none;
+  }
+  .mapa-real.visible { opacity: 1; pointer-events: auto; }
+  .marcador-real { display: grid; place-items: center; }
+  .leaflet-control-attribution {
+    background: rgba(23, 24, 28, .75) !important; color: #9a9aa3 !important;
+    font-size: 9px !important; padding: 1px 6px !important; border-radius: 6px 0 0 0 !important;
+  }
+  .leaflet-control-attribution a { color: #c7c7ce !important; }
+
   /* ---- Viaje en curso (mapa claro) ---- */
   .destino {
     position: absolute; left: 12px; right: 12px; top: calc(12px + env(safe-area-inset-top, 0px));
@@ -262,6 +275,9 @@ img{max-width:100%}
     .pantalla { animation: entra .18s ease-out; }
     @keyframes entra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   }
+
+  /* Leaflet 1.9.4 (mapa real), version original pegada tal cual, sin usar imagenes de marcador por defecto */
+.leaflet-image-layer,.leaflet-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane,.leaflet-pane>canvas,.leaflet-pane>svg,.leaflet-tile,.leaflet-tile-container,.leaflet-zoom-box{position:absolute;left:0;top:0}.leaflet-container{overflow:hidden}.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-user-drag:none}.leaflet-tile::selection{background:0 0}.leaflet-safari .leaflet-tile{image-rendering:-webkit-optimize-contrast}.leaflet-safari .leaflet-tile-container{width:1600px;height:1600px;-webkit-transform-origin:0 0}.leaflet-marker-icon,.leaflet-marker-shadow{display:block}.leaflet-container .leaflet-overlay-pane svg{max-width:none!important;max-height:none!important}.leaflet-container .leaflet-marker-pane img,.leaflet-container .leaflet-shadow-pane img,.leaflet-container .leaflet-tile,.leaflet-container .leaflet-tile-pane img,.leaflet-container img.leaflet-image-layer{max-width:none!important;max-height:none!important;width:auto;padding:0}.leaflet-container img.leaflet-tile{mix-blend-mode:plus-lighter}.leaflet-container.leaflet-touch-zoom{-ms-touch-action:pan-x pan-y;touch-action:pan-x pan-y}.leaflet-container.leaflet-touch-drag{-ms-touch-action:pinch-zoom;touch-action:none;touch-action:pinch-zoom}.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{-ms-touch-action:none;touch-action:none}.leaflet-container{-webkit-tap-highlight-color:transparent}.leaflet-container a{-webkit-tap-highlight-color:rgba(51,181,229,.4)}.leaflet-tile{filter:inherit;visibility:hidden}.leaflet-tile-loaded{visibility:inherit}.leaflet-zoom-box{width:0;height:0;-moz-box-sizing:border-box;box-sizing:border-box;z-index:800}.leaflet-overlay-pane svg{-moz-user-select:none}.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}.leaflet-map-pane canvas{z-index:100}.leaflet-map-pane svg{z-index:200}.leaflet-vml-shape{width:1px;height:1px}.lvml{behavior:url(#default#VML);display:inline-block;position:absolute}.leaflet-control{position:relative;z-index:800;pointer-events:visiblePainted;pointer-events:auto}.leaflet-bottom,.leaflet-top{position:absolute;z-index:1000;pointer-events:none}.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}.leaflet-control{float:left;clear:both}.leaflet-right .leaflet-control{float:right}.leaflet-top .leaflet-control{margin-top:10px}.leaflet-bottom .leaflet-control{margin-bottom:10px}.leaflet-left .leaflet-control{margin-left:10px}.leaflet-right .leaflet-control{margin-right:10px}.leaflet-fade-anim .leaflet-popup{opacity:0;-webkit-transition:opacity .2s linear;-moz-transition:opacity .2s linear;transition:opacity .2s linear}.leaflet-fade-anim .leaflet-map-pane .leaflet-popup{opacity:1}.leaflet-zoom-animated{-webkit-transform-origin:0 0;-ms-transform-origin:0 0;transform-origin:0 0}svg.leaflet-zoom-animated{will-change:transform}.leaflet-zoom-anim .leaflet-zoom-animated{-webkit-transition:-webkit-transform .25s cubic-bezier(0,0,.25,1);-moz-transition:-moz-transform .25s cubic-bezier(0,0,.25,1);transition:transform .25s cubic-bezier(0,0,.25,1)}.leaflet-pan-anim .leaflet-tile,.leaflet-zoom-anim .leaflet-tile{-webkit-transition:none;-moz-transition:none;transition:none}.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}.leaflet-interactive{cursor:pointer}.leaflet-grab{cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}.leaflet-crosshair,.leaflet-crosshair .leaflet-interactive{cursor:crosshair}.leaflet-control,.leaflet-popup-pane{cursor:auto}.leaflet-dragging .leaflet-grab,.leaflet-dragging .leaflet-grab .leaflet-interactive,.leaflet-dragging .leaflet-marker-draggable{cursor:move;cursor:-webkit-grabbing;cursor:-moz-grabbing;cursor:grabbing}.leaflet-image-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane>svg path,.leaflet-tile-container{pointer-events:none}.leaflet-image-layer.leaflet-interactive,.leaflet-marker-icon.leaflet-interactive,.leaflet-pane>svg path.leaflet-interactive,svg.leaflet-image-layer.leaflet-interactive path{pointer-events:visiblePainted;pointer-events:auto}.leaflet-container{background:#ddd;outline-offset:1px}.leaflet-container a{color:#0078a8}.leaflet-zoom-box{border:2px dotted #38f;background:rgba(255,255,255,.5)}.leaflet-container{font-family:"Helvetica Neue",Arial,Helvetica,sans-serif;font-size:12px;font-size:.75rem;line-height:1.5}.leaflet-bar{box-shadow:0 1px 5px rgba(0,0,0,.65);border-radius:4px}.leaflet-bar a{background-color:#fff;border-bottom:1px solid #ccc;width:26px;height:26px;line-height:26px;display:block;text-align:center;text-decoration:none;color:#000}.leaflet-bar a,.leaflet-control-layers-toggle{background-position:50% 50%;background-repeat:no-repeat;display:block}.leaflet-bar a:focus,.leaflet-bar a:hover{background-color:#f4f4f4}.leaflet-bar a:first-child{border-top-left-radius:4px;border-top-right-radius:4px}.leaflet-bar a:last-child{border-bottom-left-radius:4px;border-bottom-right-radius:4px;border-bottom:none}.leaflet-bar a.leaflet-disabled{cursor:default;background-color:#f4f4f4;color:#bbb}.leaflet-touch .leaflet-bar a{width:30px;height:30px;line-height:30px}.leaflet-touch .leaflet-bar a:first-child{border-top-left-radius:2px;border-top-right-radius:2px}.leaflet-touch .leaflet-bar a:last-child{border-bottom-left-radius:2px;border-bottom-right-radius:2px}.leaflet-control-zoom-in,.leaflet-control-zoom-out{font:bold 18px 'Lucida Console',Monaco,monospace;text-indent:1px}.leaflet-touch .leaflet-control-zoom-in,.leaflet-touch .leaflet-control-zoom-out{font-size:22px}.leaflet-control-layers{box-shadow:0 1px 5px rgba(0,0,0,.4);background:#fff;border-radius:5px}.leaflet-control-layers-toggle{background-image:url(images/layers.png);width:36px;height:36px}.leaflet-retina .leaflet-control-layers-toggle{background-image:url(images/layers-2x.png);background-size:26px 26px}.leaflet-touch .leaflet-control-layers-toggle{width:44px;height:44px}.leaflet-control-layers .leaflet-control-layers-list,.leaflet-control-layers-expanded .leaflet-control-layers-toggle{display:none}.leaflet-control-layers-expanded .leaflet-control-layers-list{display:block;position:relative}.leaflet-control-layers-expanded{padding:6px 10px 6px 6px;color:#333;background:#fff}.leaflet-control-layers-scrollbar{overflow-y:scroll;overflow-x:hidden;padding-right:5px}.leaflet-control-layers-selector{margin-top:2px;position:relative;top:1px}.leaflet-control-layers label{display:block;font-size:13px;font-size:1.08333em}.leaflet-control-layers-separator{height:0;border-top:1px solid #ddd;margin:5px -10px 5px -6px}.leaflet-default-icon-path{background-image:url(images/marker-icon.png)}.leaflet-container .leaflet-control-attribution{background:#fff;background:rgba(255,255,255,.8);margin:0}.leaflet-control-attribution,.leaflet-control-scale-line{padding:0 5px;color:#333;line-height:1.4}.leaflet-control-attribution a{text-decoration:none}.leaflet-control-attribution a:focus,.leaflet-control-attribution a:hover{text-decoration:underline}.leaflet-attribution-flag{display:inline!important;vertical-align:baseline!important;width:1em;height:.6669em}.leaflet-left .leaflet-control-scale{margin-left:5px}.leaflet-bottom .leaflet-control-scale{margin-bottom:5px}.leaflet-control-scale-line{border:2px solid #777;border-top:none;line-height:1.1;padding:2px 5px 1px;white-space:nowrap;-moz-box-sizing:border-box;box-sizing:border-box;background:rgba(255,255,255,.8);text-shadow:1px 1px #fff}.leaflet-control-scale-line:not(:first-child){border-top:2px solid #777;border-bottom:none;margin-top:-2px}.leaflet-control-scale-line:not(:first-child):not(:last-child){border-bottom:2px solid #777}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-attribution,.leaflet-touch .leaflet-control-layers{box-shadow:none}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-layers{border:2px solid rgba(0,0,0,.2);background-clip:padding-box}.leaflet-popup{position:absolute;text-align:center;margin-bottom:20px}.leaflet-popup-content-wrapper{padding:1px;text-align:left;border-radius:12px}.leaflet-popup-content{margin:13px 24px 13px 20px;line-height:1.3;font-size:13px;font-size:1.08333em;min-height:1px}.leaflet-popup-content p{margin:17px 0;margin:1.3em 0}.leaflet-popup-tip-container{width:40px;height:20px;position:absolute;left:50%;margin-top:-1px;margin-left:-20px;overflow:hidden;pointer-events:none}.leaflet-popup-tip{width:17px;height:17px;padding:1px;margin:-10px auto 0;pointer-events:auto;-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);transform:rotate(45deg)}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff;color:#333;box-shadow:0 3px 14px rgba(0,0,0,.4)}.leaflet-container a.leaflet-popup-close-button{position:absolute;top:0;right:0;border:none;text-align:center;width:24px;height:24px;font:16px/24px Tahoma,Verdana,sans-serif;color:#757575;text-decoration:none;background:0 0}.leaflet-container a.leaflet-popup-close-button:focus,.leaflet-container a.leaflet-popup-close-button:hover{color:#585858}.leaflet-popup-scrolled{overflow:auto}.leaflet-oldie .leaflet-popup-content-wrapper{-ms-zoom:1}.leaflet-oldie .leaflet-popup-tip{width:24px;margin:0 auto}.leaflet-oldie .leaflet-control-layers,.leaflet-oldie .leaflet-control-zoom,.leaflet-oldie .leaflet-popup-content-wrapper,.leaflet-oldie .leaflet-popup-tip{border:1px solid #999}.leaflet-div-icon{background:#fff;border:1px solid #666}.leaflet-tooltip{position:absolute;padding:6px;background-color:#fff;border:1px solid #fff;border-radius:3px;color:#222;white-space:nowrap;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.4)}.leaflet-tooltip.leaflet-interactive{cursor:pointer;pointer-events:auto}.leaflet-tooltip-bottom:before,.leaflet-tooltip-left:before,.leaflet-tooltip-right:before,.leaflet-tooltip-top:before{position:absolute;pointer-events:none;border:6px solid transparent;background:0 0;content:""}.leaflet-tooltip-bottom{margin-top:6px}.leaflet-tooltip-top{margin-top:-6px}.leaflet-tooltip-bottom:before,.leaflet-tooltip-top:before{left:50%;margin-left:-6px}.leaflet-tooltip-top:before{bottom:0;margin-bottom:-12px;border-top-color:#fff}.leaflet-tooltip-bottom:before{top:0;margin-top:-12px;margin-left:-6px;border-bottom-color:#fff}.leaflet-tooltip-left{margin-left:-6px}.leaflet-tooltip-right{margin-left:6px}.leaflet-tooltip-left:before,.leaflet-tooltip-right:before{top:50%;margin-top:-6px}.leaflet-tooltip-left:before{right:0;margin-right:-12px;border-left-color:#fff}.leaflet-tooltip-right:before{left:0;margin-left:-12px;border-right-color:#fff}@media print{.leaflet-control{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 </head>
 <body>
@@ -370,6 +386,8 @@ img{max-width:100%}
         <path d="M0 -12 L10 10 L0 4 L-10 10 Z" fill="#000"/>
       </g>
     </svg>
+    <!-- Mapa con calles reales (OpenStreetMap, estilo oscuro): se muestra encima del dibujo apenas hay GPS -->
+    <div id="mapa-real" class="mapa-real" aria-hidden="true"></div>
 
     <div class="destino">
       <b>Formosa</b>
@@ -462,6 +480,7 @@ img{max-width:100%}
   <span class="solo-lectura">Cargando</span>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
 /* ===================== MODELO ===================== */
 
@@ -569,19 +588,20 @@ class PantallaDatos extends Pantalla {
 
 // Convierte coordenadas GPS en un nombre de calle, usando el servicio gratuito de OpenStreetMap.
 class Ubicador {
-  static #DURACION_CACHE_MS = 20000; // evita pedir la calle de nuevo si volvés a esta pantalla enseguida
-  #ultimaCalle = null;
+  static #DURACION_CACHE_MS = 20000; // evita pedir la ubicación de nuevo si volvés a esta pantalla enseguida
+  #ultima = null;
   #ultimaVez = 0;
 
-  async calleActual() {
-    if (Date.now() - this.#ultimaVez < Ubicador.#DURACION_CACHE_MS && this.#ultimaCalle) {
-      return this.#ultimaCalle;
+  // Devuelve { calle, latitud, longitud }.
+  async ubicacionActual() {
+    if (Date.now() - this.#ultimaVez < Ubicador.#DURACION_CACHE_MS && this.#ultima) {
+      return this.#ultima;
     }
     const { latitud, longitud } = await this.#posicion();
     const calle = await this.#calleDesdeCoordenadas(latitud, longitud);
-    this.#ultimaCalle = calle;
+    this.#ultima = { calle, latitud, longitud };
     this.#ultimaVez = Date.now();
-    return calle;
+    return this.#ultima;
   }
 
   #posicion() {
@@ -609,11 +629,22 @@ class Ubicador {
 }
 
 class PantallaViaje extends Pantalla {
+  // Ícono del mapa real: mismo círculo blanco con flecha negra que el del mapa dibujado.
+  static #ICONO_UBICACION = typeof L === "undefined" ? null : L.divIcon({
+    className: "marcador-real", iconSize: [38, 38], iconAnchor: [19, 19],
+    html: '<svg viewBox="0 0 40 40" width="38" height="38">'
+      + '<circle cx="20" cy="20" r="17" fill="#fff" stroke="#000" stroke-width="3"/>'
+      + '<path d="M20 8 L30 31 L20 25 L10 31 Z" fill="#000"/></svg>',
+  });
+
   constructor(alCobrar) {
     super("p-viaje");
     this.pago = null;
     this.ubicador = new Ubicador();
     this.elCalle = document.getElementById("v-calle");
+    this.elMapaReal = document.getElementById("mapa-real");
+    this.mapaReal = null;
+    this.marcadorReal = null;
     this.#dibujarManzanas();
     document.getElementById("b-ir-cobro").addEventListener("click", () => alCobrar(this.pago));
   }
@@ -621,16 +652,42 @@ class PantallaViaje extends Pantalla {
   cargar(pago) {
     this.pago = pago;
     document.getElementById("v-nombre").textContent = pago.pasajero.nombre;
-    this.#actualizarCalle();
+    this.#actualizarUbicacion();
   }
 
-  async #actualizarCalle() {
+  async #actualizarUbicacion() {
     this.elCalle.textContent = "Buscando tu ubicación…";
     try {
-      this.elCalle.textContent = await this.ubicador.calleActual();
+      const { calle, latitud, longitud } = await this.ubicador.ubicacionActual();
+      this.elCalle.textContent = calle;
+      this.#mostrarMapaReal(latitud, longitud);
     } catch {
       // Sin permiso de ubicación, sin GPS, o abierto desde el link de claude.ai (ahí el navegador la bloquea).
       this.elCalle.textContent = "Formosa Capital";
+    }
+  }
+
+  // Mapa con calles reales (Leaflet + tiles oscuros de CARTO/OpenStreetMap), centrado en el GPS.
+  // Si algo falla, no pasa nada: se queda visible el mapa dibujado de abajo.
+  #mostrarMapaReal(latitud, longitud) {
+    if (typeof L === "undefined") return;
+    try {
+      if (!this.mapaReal) {
+        this.mapaReal = L.map(this.elMapaReal, { zoomControl: false, attributionControl: true })
+          .setView([latitud, longitud], 17);
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+          subdomains: "abcd", maxZoom: 20,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        }).addTo(this.mapaReal);
+        this.marcadorReal = L.marker([latitud, longitud], { icon: PantallaViaje.#ICONO_UBICACION }).addTo(this.mapaReal);
+        this.elMapaReal.classList.add("visible");
+      } else {
+        this.mapaReal.setView([latitud, longitud], this.mapaReal.getZoom());
+        this.marcadorReal.setLatLng([latitud, longitud]);
+      }
+      setTimeout(() => this.mapaReal && this.mapaReal.invalidateSize(), 60);
+    } catch {
+      // Se queda con el mapa dibujado como respaldo.
     }
   }
 
