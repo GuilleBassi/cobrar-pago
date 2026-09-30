@@ -193,6 +193,8 @@ img{max-width:100%}
     background: transparent; opacity: 0; transition: opacity .3s ease; pointer-events: none;
   }
   .mapa-real.visible { opacity: 1; pointer-events: auto; }
+  /* Tinte azulado sobre las calles (no sobre el marcador ni la atribución), midiendo el tono de una captura real de Google Maps en modo oscuro. */
+  .mapa-real .leaflet-tile-pane { filter: sepia(1) hue-rotate(190deg) saturate(1.1) brightness(.78); }
   .marcador-real { display: grid; place-items: center; }
   .leaflet-control-attribution {
     background: rgba(23, 24, 28, .75) !important; color: #9a9aa3 !important;
@@ -643,7 +645,7 @@ class Ubicador {
 // Sin interacción (no se puede mover ni hacer zoom), igual que el mapa dibujado que reemplaza.
 // Si algo falla, no pasa nada: se queda visible el mapa dibujado de abajo. Se reutiliza en cada pantalla con mapa.
 class MapaDeFondo {
-  static #ZOOM = 14;
+  static #ZOOM = 16; // el más cercano con datos reales para Formosa; a partir de acá el servicio no tiene más detalle
   static #icono = null;
 
   // Círculo blanco con flecha negra: mismo dibujo que el marcador del mapa dibujado.
