@@ -202,19 +202,19 @@ img{max-width:100%}
 
   /* ---- Viaje en curso (mapa claro) ---- */
   .destino {
-    position: absolute; left: 12px; right: 12px; top: calc(12px + env(safe-area-inset-top, 0px));
+    position: absolute; left: 12px; right: 12px; top: calc(12px + env(safe-area-inset-top, 0px)); z-index: 2;
     background: #000; color: #fff; border-radius: 12px; padding: 14px 16px 16px; text-align: center;
   }
   .destino::before { content: ""; position: absolute; left: 14px; top: 16px; width: 10px; height: 10px; background: #2ea043; }
   .destino b { display: block; font-size: 19px; font-weight: 500; margin-bottom: 4px; }
   .destino span { font-size: 18px; line-height: 1.3; display: block; overflow-wrap: anywhere; }
   .flota {
-    position: absolute; width: 56px; height: 56px; border-radius: 50%; background: #fff;
+    position: absolute; z-index: 2; width: 56px; height: 56px; border-radius: 50%; background: #fff;
     box-shadow: 0 2px 8px rgba(0,0,0,.18); display: grid; place-items: center;
   }
   .flota svg { width: 26px; height: 26px; fill: none; stroke: #111; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
   .limite {
-    position: absolute; left: 14px; background: #fff; color: #111; border-radius: 8px; padding: 4px 8px 5px;
+    position: absolute; z-index: 2; left: 14px; background: #fff; color: #111; border-radius: 8px; padding: 4px 8px 5px;
     text-align: center; box-shadow: 0 1px 6px rgba(0,0,0,.2); line-height: 1;
   }
   .limite b { display: block; font-size: 28px; font-weight: 500; }
@@ -236,7 +236,7 @@ img{max-width:100%}
   .hud .pildora span { color: #1f6b3d; }
   .hud .incentivo { background: rgba(230,230,230,.75); color: #222; font-size: 17px; font-weight: 500; padding: 4px 16px; border-radius: 4px; letter-spacing: .02em; }
   .sheet {
-    position: absolute; left: 0; right: 0; bottom: 0; background: var(--bg); color: var(--ink);
+    position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; background: var(--bg); color: var(--ink);
     border-radius: 16px 16px 0 0; padding: 26px 16px calc(16px + env(safe-area-inset-bottom, 0px));
     display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
   }
@@ -667,25 +667,37 @@ class PantallaViaje extends Pantalla {
     }
   }
 
-  // Mapa con calles reales (Leaflet + tiles oscuros de CARTO/OpenStreetMap), centrado en el GPS.
+  // Mapa con calles reales (Leaflet + Esri "Dark Gray", gratis y sin API key), centrado en el GPS.
+  // Zoom fijo en 14: a partir de ahí ese servicio empieza a mostrar nombres de calles, y el pedido es un mapa limpio.
+  // Sin interacción (no se puede mover ni hacer zoom), igual que el mapa dibujado que reemplaza.
   // Si algo falla, no pasa nada: se queda visible el mapa dibujado de abajo.
+  static #ZOOM_MAPA_REAL = 14;
+
   #mostrarMapaReal(latitud, longitud) {
     if (typeof L === "undefined") return;
     try {
       if (!this.mapaReal) {
-        this.mapaReal = L.map(this.elMapaReal, { zoomControl: false, attributionControl: true })
-          .setView([latitud, longitud], 17);
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-          subdomains: "abcd", maxZoom: 20,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        this.mapaReal = L.map(this.elMapaReal, {
+          zoomControl: false, attributionControl: true,
+          dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false,
+        }).setView([latitud, longitud], PantallaViaje.#ZOOM_MAPA_REAL);
+        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+          maxZoom: PantallaViaje.#ZOOM_MAPA_REAL, minZoom: PantallaViaje.#ZOOM_MAPA_REAL,
+          attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
         }).addTo(this.mapaReal);
         this.marcadorReal = L.marker([latitud, longitud], { icon: PantallaViaje.#ICONO_UBICACION }).addTo(this.mapaReal);
         this.elMapaReal.classList.add("visible");
       } else {
-        this.mapaReal.setView([latitud, longitud], this.mapaReal.getZoom());
+        this.mapaReal.setView([latitud, longitud], PantallaViaje.#ZOOM_MAPA_REAL);
         this.marcadorReal.setLatLng([latitud, longitud]);
       }
-      setTimeout(() => this.mapaReal && this.mapaReal.invalidateSize(), 60);
+      // La pantalla recién se está mostrando, así que el mapa se crea antes de tener su tamaño final:
+      // sin este reintento carga un solo cuadro del mapa en vez de llenar toda la pantalla.
+      setTimeout(() => {
+        if (!this.mapaReal) return;
+        this.mapaReal.invalidateSize();
+        this.mapaReal.setView([latitud, longitud], PantallaViaje.#ZOOM_MAPA_REAL);
+      }, 150);
     } catch {
       // Se queda con el mapa dibujado como respaldo.
     }
@@ -887,7 +899,9 @@ class App {
     if (limpiar) this.datos.limpiar();
     this.#mostrar(this.datos, despues);
   }
-  irAViaje(pago) { this.viaje.cargar(pago); this.#mostrar(this.viaje); }
+  // cargar() va como "despues", no antes: si arranca mientras la pantalla sigue oculta,
+  // el mapa mide tamaño cero y solo carga un cuadro en vez de llenar toda la pantalla.
+  irAViaje(pago) { this.#mostrar(this.viaje, () => this.viaje.cargar(pago)); }
   irACobro(pago) { this.cobro.cargar(pago); this.#mostrar(this.cobro); }
   irAResumen(pago, recibido) { this.resumen.cargar(pago, recibido); this.#mostrar(this.resumen); }
   irACalificar(pago) { this.calificar.cargar(pago.pasajero); this.#mostrar(this.calificar); }
